@@ -1,121 +1,188 @@
-# My Financial Organization
+# My Financial Organization - Financial Core API
 
-Aplicação web de organização financeira pessoal com:
-
-- React 19 + Vite + TypeScript
-- Tailwind CSS
-- Supabase (Auth, Postgres e Storage)
-- Login por email/senha com sessão curta de 4 horas
-- Módulos: Dashboard, Transações, Categorias, Contas, Metas, Relatórios e Usuários
-- Controle de acesso por módulo e ação: visualizar, listar, criar, editar e excluir
-- Conversão de moedas por API externa (Frankfurter)
-- Moedas suportadas na UI: BRL, USD, EUR e JPY
-- Campos customizados de formulário (checkbox, select, data e upload)
-- Seletor visual de ícones para categorias
-- Upload de logo por conta (logo do banco)
-- Máscaras para telefone e valores monetários
+Core financeiro API-first para centralizar suas informações de finanças pessoais e integrar com qualquer cliente (web, app mobile, automações e agentes AI).
 
 ## Stack
 
-- Frontend: `react`, `react-router-dom`, `react-icons`
-- Banco/Auth/Storage: `@supabase/supabase-js`
-- Utilitários: `date-fns`, `zod`
-- Testes unitários: `vitest`, `@testing-library/react`
-- Testes E2E: `@playwright/test`
-- Deploy recomendado: Vercel
+- TypeScript (Node.js)
+- Vercel Functions (`api/*`)
+- Supabase (Auth + Postgres + Storage)
+- Zod para contratos/validação
+
+## Arquitetura
+
+- `api/`: endpoints HTTP da API
+- `src/core/`: regras centrais (auth, permissões, validação, paginação, idempotência)
+- `supabase/`: migrations e seed de banco
+- `docs/`: documentação interativa estilo Swagger
+- `sdk/`: OpenAPI exportado e SDK gerado para frontend
+
+## Autenticação e Segurança
+
+Todas as chamadas exigem API key:
+
+- Header obrigatório: `X-API-Key: <API_KEY>`
+
+Rotas de negócio exigem também token de usuário:
+
+- Header: `Authorization: Bearer <SUPABASE_ACCESS_TOKEN>`
+
+Fluxos de sessão:
+
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+
+Importante:
+
+- `SUPABASE_ANON_KEY` (publishable) não é JWT de usuário.
+- O JWT correto é o `access_token` retornado pelo login/refresh.
+
+## Erros Padronizados
+
+Todos os erros seguem o formato:
+
+```json
+{
+  "code": "TRANSACTIONS_LIST_FAILED",
+  "error": "Mensagem legível",
+  "details": null
+}
+```
+
+Isso facilita tratar erros de forma estável no frontend.
+
+## Paginação Cursor + Sort
+
+As rotas de listagem (`accounts`, `categories`, `goals`, `transactions`) suportam:
+
+- `limit`
+- `offset`
+- `cursor` (opaco)
+- `sort`
+- `order` (`asc` | `desc`)
+
+Resposta:
+
+```json
+{
+  "pagination": {
+    "limit": 50,
+    "offset": 0,
+    "total": 1200,
+    "sort": "created_at",
+    "order": "desc",
+    "has_more": true,
+    "next_cursor": "..."
+  }
+}
+```
+
+## Idempotência
+
+Rotas mutáveis autenticadas aceitam header opcional:
+
+- `Idempotency-Key: <chave-unica>`
+
+Se a mesma chave for reaproveitada com payload diferente na mesma rota/método, a API retorna conflito (`409`).
+
+Para persistência de idempotência no banco, aplique a migration:
+
+- `supabase/migrations/20260402010000_idempotency_requests.sql`
+
+## Versionamento e Changelog
+
+- `GET /api/v1` - metadados da versão estável
+- `GET /api/v2` - status da próxima versão
+- `GET /api/changelog` - histórico de releases
+
+## Endpoints
+
+Base local: `http://localhost:3000/api`
+
+- `GET /api`
+- `GET /api/health`
+- `GET /api/changelog`
+- `GET /api/openapi.json`
+- `GET /api/v1`
+- `GET /api/v2`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `GET /api/v1/preferences`
+- `PATCH /api/v1/preferences`
+- `GET /api/v1/dashboard/summary`
+- `GET /api/v1/accounts`
+- `POST /api/v1/accounts`
+- `GET /api/v1/accounts/:id`
+- `PATCH /api/v1/accounts/:id`
+- `DELETE /api/v1/accounts/:id`
+- `GET /api/v1/categories`
+- `POST /api/v1/categories`
+- `GET /api/v1/categories/:id`
+- `PATCH /api/v1/categories/:id`
+- `DELETE /api/v1/categories/:id`
+- `GET /api/v1/goals`
+- `POST /api/v1/goals`
+- `GET /api/v1/goals/:id`
+- `PATCH /api/v1/goals/:id`
+- `DELETE /api/v1/goals/:id`
+- `GET /api/v1/transactions`
+- `POST /api/v1/transactions`
+- `GET /api/v1/transactions/:id`
+- `PATCH /api/v1/transactions/:id`
+- `DELETE /api/v1/transactions/:id`
+- `GET /api/v1/reports/monthly`
+- `GET /api/v1/reports/categories`
+
+## Documentação Interativa
+
+- URL local: `http://localhost:3000/docs`
+- Login direto na docs (API key + email + senha)
+- Persistência de credenciais em `localStorage`
+- Execução de requests e preview de JSON de resposta
+
+## SDK para Frontend
+
+Geração automática baseada no OpenAPI:
+
+```bash
+npm run sdk:generate
+```
+
+Arquivos gerados em:
+
+- `sdk/openapi.json`
+- `sdk/generated/*`
+
+## Variáveis de ambiente
+
+Crie `.env.local` a partir de `.env.example`:
+
+- `API_KEY` (obrigatória)
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (opcional)
+- `CORS_ALLOW_ORIGIN` (default `*`)
 
 ## Rodando localmente
 
-1. Instale dependências:
-
 ```bash
 npm install
-```
-
-2. Configure o ambiente:
-
-```bash
-cp .env.example .env.local
-```
-
-3. Suba em desenvolvimento:
-
-```bash
 npm run dev
 ```
 
-4. Validação:
+## Qualidade
 
 ```bash
 npm run lint
-npm run build
-```
-
-## Banco de dados (Supabase)
-
-Migrations:
-
-- `supabase/migrations/20260319011500_init_financial_system.sql`
-- `supabase/migrations/20260319040000_access_control_users.sql`
-- `supabase/migrations/20260319053000_user_phone_access_update.sql`
-- `supabase/migrations/20260319070000_account_logos_ptbr_defaults.sql`
-
-Seed:
-
-- `supabase/seed.sql`
-
-### Estrutura principal
-
-- Tabelas: `user_preferences`, `accounts`, `categories`, `goals`, `transactions`, `user_profiles`, `user_module_permissions`
-- Views: `monthly_report`, `category_report`
-- Bucket privado: `receipts` com policies por usuário
-- Bucket público: `account-logos` para exibição de logos das contas
-- RLS nas tabelas de domínio e de acesso
-- Funções RPC administrativas:
-  - `admin_create_user`
-  - `admin_update_user_access`
-  - `admin_delete_user`
-
-### Seed admin
-
-Cria (ou atualiza) usuário admin confirmado:
-
-- Email: `vitorgabrieldeoliveiradev@gmail.com`
-- Senha: `Vitorgabrieldev100.`
-
-## Testes
-
-Unitários (com cobertura):
-
-```bash
-npm run test:unit
-```
-
-E2E:
-
-```bash
-npm run test:e2e
-```
-
-Rodar tudo:
-
-```bash
+npm run typecheck
 npm run test
 ```
 
-Variáveis opcionais para E2E:
-
-- `E2E_ADMIN_EMAIL`
-- `E2E_ADMIN_PASSWORD`
-
 ## Deploy na Vercel
 
-O projeto está pronto para deploy estático:
-
-1. Importe o repositório na Vercel.
-2. Defina as variáveis:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-3. Build command: `npm run build`
-4. Output directory: `dist`
-5. SPA fallback já configurado em `vercel.json`
+1. Importar repositório no Vercel
+2. Configurar variáveis de ambiente de produção
+3. Fazer deploy (CI/CD automático por commit)
+4. Validar `/api/health` e `/docs` após deploy

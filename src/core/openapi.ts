@@ -1,0 +1,1615 @@
+import { API_CURRENT_VERSION } from './changelog'
+
+const dataEnvelope = (schemaRef: string) => ({
+  type: 'object',
+  properties: {
+    data: { $ref: schemaRef },
+  },
+  required: ['data'],
+})
+
+const listEnvelope = (schemaRef: string) => ({
+  type: 'object',
+  properties: {
+    data: {
+      type: 'array',
+      items: { $ref: schemaRef },
+    },
+    pagination: { $ref: '#/components/schemas/Pagination' },
+  },
+  required: ['data', 'pagination'],
+})
+
+export const createOpenApiSpec = (baseUrl?: string): Record<string, unknown> => {
+  const servers = baseUrl
+    ? [{ url: baseUrl, description: 'Runtime base URL' }]
+    : [{ url: '/', description: 'Relative base URL' }]
+
+  return {
+    openapi: '3.1.0',
+    info: {
+      title: 'My Financial Organization - Core API',
+      version: API_CURRENT_VERSION,
+      description:
+        'API financeira central com autenticação por API key + token Supabase.',
+    },
+    servers,
+    tags: [
+      { name: 'System', description: 'Saúde, metadados e versionamento da API' },
+      { name: 'Auth', description: 'Autenticação com email/senha e sessão Supabase' },
+      { name: 'Preferences', description: 'Preferências do usuário' },
+      { name: 'Dashboard', description: 'Resumo consolidado para interface inicial' },
+      { name: 'Accounts', description: 'Contas financeiras' },
+      { name: 'Categories', description: 'Categorias de receita e despesa' },
+      { name: 'Goals', description: 'Metas financeiras' },
+      { name: 'Transactions', description: 'Lançamentos financeiros' },
+      { name: 'Reports', description: 'Relatórios consolidados' },
+    ],
+    security: [{ ApiKeyAuth: [] }],
+    paths: {
+      '/api': {
+        get: {
+          tags: ['System'],
+          summary: 'Informações da API',
+          responses: {
+            '200': {
+              description: 'Metadados da API',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      name: { type: 'string' },
+                      version: { type: 'string' },
+                      healthcheck: { type: 'string' },
+                      docs: { type: 'string' },
+                      openapi: { type: 'string' },
+                      changelog: { type: 'string' },
+                      endpoints: {
+                        type: 'object',
+                        additionalProperties: { type: 'string' },
+                      },
+                    },
+                    required: ['name', 'version', 'healthcheck', 'openapi', 'endpoints'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+          },
+        },
+      },
+      '/api/health': {
+        get: {
+          tags: ['System'],
+          summary: 'Healthcheck',
+          responses: {
+            '200': {
+              description: 'Serviço disponível',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      status: { type: 'string', example: 'ok' },
+                      service: { type: 'string' },
+                      timestamp: { type: 'string', format: 'date-time' },
+                    },
+                    required: ['status', 'service', 'timestamp'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+          },
+        },
+      },
+      '/api/changelog': {
+        get: {
+          tags: ['System'],
+          summary: 'Changelog da API',
+          responses: {
+            '200': {
+              description: 'Histórico de versões',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      current_version: { type: 'string' },
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/ChangelogEntry' },
+                      },
+                    },
+                    required: ['current_version', 'data'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+          },
+        },
+      },
+      '/api/openapi.json': {
+        get: {
+          tags: ['System'],
+          summary: 'Especificação OpenAPI em JSON',
+          responses: {
+            '200': {
+              description: 'Documento OpenAPI da API',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    additionalProperties: true,
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+          },
+        },
+      },
+      '/api/v1': {
+        get: {
+          tags: ['System'],
+          summary: 'Metadados da versão estável v1',
+          responses: {
+            '200': {
+              description: 'Status da versão v1',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      version: { type: 'string', example: 'v1' },
+                      status: { type: 'string', example: 'stable' },
+                      openapi: { type: 'string' },
+                      changelog: { type: 'string' },
+                      latest_release: {
+                        anyOf: [
+                          { $ref: '#/components/schemas/ChangelogEntry' },
+                          { type: 'null' },
+                        ],
+                      },
+                    },
+                    required: ['version', 'status', 'openapi', 'changelog', 'latest_release'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+          },
+        },
+      },
+      '/api/v2': {
+        get: {
+          tags: ['System'],
+          summary: 'Status da versão v2',
+          responses: {
+            '200': {
+              description: 'Status da versão v2',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      version: { type: 'string', example: 'v2' },
+                      status: { type: 'string', example: 'planned' },
+                      message: { type: 'string' },
+                    },
+                    required: ['version', 'status', 'message'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+          },
+        },
+      },
+      '/api/auth/login': {
+        post: {
+          tags: ['Auth'],
+          summary: 'Login com email/senha para obter access token do Supabase',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/AuthLoginBody' },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'Sessão autenticada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/AuthSessionData'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+      },
+      '/api/auth/refresh': {
+        post: {
+          tags: ['Auth'],
+          summary: 'Renovar sessão com refresh token',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/AuthRefreshBody' },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'Sessão renovada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/AuthSessionData'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+      },
+      '/api/auth/logout': {
+        post: {
+          tags: ['Auth'],
+          summary: 'Revogar sessão atual ou global',
+          requestBody: {
+            required: false,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/AuthLogoutBody' },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'Sessão revogada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/AuthLogoutData'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+      },
+      '/api/v1/preferences': {
+        get: {
+          tags: ['Preferences'],
+          summary: 'Buscar preferências do usuário atual',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          responses: {
+            '200': {
+              description: 'Preferências retornadas',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Preferences'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+          },
+        },
+        patch: {
+          tags: ['Preferences'],
+          summary: 'Atualizar preferências do usuário atual',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/PreferencesPatch' },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'Preferências atualizadas',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Preferences'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+      },
+      '/api/v1/dashboard/summary': {
+        get: {
+          tags: ['Dashboard'],
+          summary: 'Resumo consolidado para dashboard',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } },
+            { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } },
+          ],
+          responses: {
+            '200': {
+              description: 'Resumo retornado',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/DashboardSummary'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+          },
+        },
+      },
+      '/api/v1/accounts': {
+        get: {
+          tags: ['Accounts'],
+          summary: 'Listar contas',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/Limit' },
+            { $ref: '#/components/parameters/Offset' },
+            { $ref: '#/components/parameters/Cursor' },
+            { $ref: '#/components/parameters/AccountSort' },
+            { $ref: '#/components/parameters/SortOrder' },
+            {
+              name: 'include_archived',
+              in: 'query',
+              schema: { type: 'boolean', default: false },
+            },
+            { name: 'search', in: 'query', schema: { type: 'string' } },
+          ],
+          responses: {
+            '200': {
+              description: 'Lista de contas',
+              content: {
+                'application/json': {
+                  schema: listEnvelope('#/components/schemas/Account'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+        post: {
+          tags: ['Accounts'],
+          summary: 'Criar conta',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/AccountCreate' },
+              },
+            },
+          },
+          responses: {
+            '201': {
+              description: 'Conta criada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Account'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+      },
+      '/api/v1/accounts/{id}': {
+        get: {
+          tags: ['Accounts'],
+          summary: 'Buscar conta por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [{ $ref: '#/components/parameters/PathId' }],
+          responses: {
+            '200': {
+              description: 'Conta encontrada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Account'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+          },
+        },
+        patch: {
+          tags: ['Accounts'],
+          summary: 'Atualizar conta por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/PathId' },
+            { $ref: '#/components/parameters/IdempotencyKey' },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/AccountPatch' },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'Conta atualizada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Account'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+        delete: {
+          tags: ['Accounts'],
+          summary: 'Excluir conta por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/PathId' },
+            { $ref: '#/components/parameters/IdempotencyKey' },
+          ],
+          responses: {
+            '200': {
+              description: 'Conta excluída',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      deleted: { type: 'boolean', example: true },
+                      id: { type: 'string', format: 'uuid' },
+                    },
+                    required: ['deleted', 'id'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+          },
+        },
+      },
+      '/api/v1/categories': {
+        get: {
+          tags: ['Categories'],
+          summary: 'Listar categorias',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/Limit' },
+            { $ref: '#/components/parameters/Offset' },
+            { $ref: '#/components/parameters/Cursor' },
+            { $ref: '#/components/parameters/CategorySort' },
+            { $ref: '#/components/parameters/SortOrder' },
+            {
+              name: 'kind',
+              in: 'query',
+              schema: { type: 'string', enum: ['income', 'expense'] },
+            },
+            { name: 'search', in: 'query', schema: { type: 'string' } },
+          ],
+          responses: {
+            '200': {
+              description: 'Lista de categorias',
+              content: {
+                'application/json': {
+                  schema: listEnvelope('#/components/schemas/Category'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+        post: {
+          tags: ['Categories'],
+          summary: 'Criar categoria',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/CategoryCreate' },
+              },
+            },
+          },
+          responses: {
+            '201': {
+              description: 'Categoria criada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Category'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+      },
+      '/api/v1/categories/{id}': {
+        get: {
+          tags: ['Categories'],
+          summary: 'Buscar categoria por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [{ $ref: '#/components/parameters/PathId' }],
+          responses: {
+            '200': {
+              description: 'Categoria encontrada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Category'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+          },
+        },
+        patch: {
+          tags: ['Categories'],
+          summary: 'Atualizar categoria por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/PathId' },
+            { $ref: '#/components/parameters/IdempotencyKey' },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/CategoryPatch' },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'Categoria atualizada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Category'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+        delete: {
+          tags: ['Categories'],
+          summary: 'Excluir categoria por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/PathId' },
+            { $ref: '#/components/parameters/IdempotencyKey' },
+          ],
+          responses: {
+            '200': {
+              description: 'Categoria excluída',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      deleted: { type: 'boolean', example: true },
+                      id: { type: 'string', format: 'uuid' },
+                    },
+                    required: ['deleted', 'id'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+          },
+        },
+      },
+      '/api/v1/goals': {
+        get: {
+          tags: ['Goals'],
+          summary: 'Listar metas',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/Limit' },
+            { $ref: '#/components/parameters/Offset' },
+            { $ref: '#/components/parameters/Cursor' },
+            { $ref: '#/components/parameters/GoalSort' },
+            { $ref: '#/components/parameters/SortOrder' },
+            {
+              name: 'status',
+              in: 'query',
+              schema: {
+                type: 'string',
+                enum: ['active', 'achieved', 'paused', 'cancelled'],
+              },
+            },
+            { name: 'search', in: 'query', schema: { type: 'string' } },
+          ],
+          responses: {
+            '200': {
+              description: 'Lista de metas',
+              content: {
+                'application/json': {
+                  schema: listEnvelope('#/components/schemas/Goal'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+        post: {
+          tags: ['Goals'],
+          summary: 'Criar meta',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/GoalCreate' },
+              },
+            },
+          },
+          responses: {
+            '201': {
+              description: 'Meta criada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Goal'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+      },
+      '/api/v1/goals/{id}': {
+        get: {
+          tags: ['Goals'],
+          summary: 'Buscar meta por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [{ $ref: '#/components/parameters/PathId' }],
+          responses: {
+            '200': {
+              description: 'Meta encontrada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Goal'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+          },
+        },
+        patch: {
+          tags: ['Goals'],
+          summary: 'Atualizar meta por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/PathId' },
+            { $ref: '#/components/parameters/IdempotencyKey' },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/GoalPatch' },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'Meta atualizada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Goal'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+        delete: {
+          tags: ['Goals'],
+          summary: 'Excluir meta por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/PathId' },
+            { $ref: '#/components/parameters/IdempotencyKey' },
+          ],
+          responses: {
+            '200': {
+              description: 'Meta excluída',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      deleted: { type: 'boolean', example: true },
+                      id: { type: 'string', format: 'uuid' },
+                    },
+                    required: ['deleted', 'id'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+          },
+        },
+      },
+      '/api/v1/transactions': {
+        get: {
+          tags: ['Transactions'],
+          summary: 'Listar transações',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/Limit' },
+            { $ref: '#/components/parameters/Offset' },
+            { $ref: '#/components/parameters/Cursor' },
+            { $ref: '#/components/parameters/TransactionSort' },
+            { $ref: '#/components/parameters/SortOrder' },
+            { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } },
+            { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } },
+            {
+              name: 'type',
+              in: 'query',
+              schema: { type: 'string', enum: ['income', 'expense', 'transfer'] },
+            },
+            { name: 'account_id', in: 'query', schema: { type: 'string', format: 'uuid' } },
+            { name: 'category_id', in: 'query', schema: { type: 'string', format: 'uuid' } },
+            { name: 'goal_id', in: 'query', schema: { type: 'string', format: 'uuid' } },
+            { name: 'search', in: 'query', schema: { type: 'string' } },
+          ],
+          responses: {
+            '200': {
+              description: 'Lista de transações',
+              content: {
+                'application/json': {
+                  schema: listEnvelope('#/components/schemas/Transaction'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+        post: {
+          tags: ['Transactions'],
+          summary: 'Criar transação (com suporte a parcelas/recorrência)',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/TransactionCreate' },
+              },
+            },
+          },
+          responses: {
+            '201': {
+              description: 'Transação(ões) criada(s)',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/Transaction' },
+                      },
+                      meta: {
+                        type: 'object',
+                        properties: {
+                          created_count: { type: 'integer' },
+                        },
+                        required: ['created_count'],
+                      },
+                    },
+                    required: ['data', 'meta'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+      },
+      '/api/v1/transactions/{id}': {
+        get: {
+          tags: ['Transactions'],
+          summary: 'Buscar transação por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [{ $ref: '#/components/parameters/PathId' }],
+          responses: {
+            '200': {
+              description: 'Transação encontrada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Transaction'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+          },
+        },
+        patch: {
+          tags: ['Transactions'],
+          summary: 'Atualizar transação por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/PathId' },
+            { $ref: '#/components/parameters/IdempotencyKey' },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/TransactionPatch' },
+              },
+            },
+          },
+          responses: {
+            '200': {
+              description: 'Transação atualizada',
+              content: {
+                'application/json': {
+                  schema: dataEnvelope('#/components/schemas/Transaction'),
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+            '422': { $ref: '#/components/responses/ValidationError' },
+          },
+        },
+        delete: {
+          tags: ['Transactions'],
+          summary: 'Excluir transação por id',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { $ref: '#/components/parameters/PathId' },
+            { $ref: '#/components/parameters/IdempotencyKey' },
+            {
+              name: 'scope',
+              in: 'query',
+              schema: {
+                type: 'string',
+                enum: ['single', 'installment_group'],
+                default: 'single',
+              },
+            },
+          ],
+          responses: {
+            '200': {
+              description: 'Transação excluída',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      deleted: { type: 'boolean', example: true },
+                      deleted_count: { type: 'integer', minimum: 0 },
+                      scope: {
+                        type: 'string',
+                        enum: ['single', 'installment_group'],
+                      },
+                    },
+                    required: ['deleted', 'deleted_count', 'scope'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+            '404': { $ref: '#/components/responses/NotFoundError' },
+            '409': { $ref: '#/components/responses/ConflictError' },
+          },
+        },
+      },
+      '/api/v1/reports/monthly': {
+        get: {
+          tags: ['Reports'],
+          summary: 'Relatório mensal consolidado',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } },
+            { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } },
+          ],
+          responses: {
+            '200': {
+              description: 'Linhas do relatório mensal',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/MonthlyReportRow' },
+                      },
+                    },
+                    required: ['data'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+          },
+        },
+      },
+      '/api/v1/reports/categories': {
+        get: {
+          tags: ['Reports'],
+          summary: 'Relatório por categoria',
+          security: [{ ApiKeyAuth: [], BearerAuth: [] }],
+          parameters: [
+            { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } },
+            { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } },
+            {
+              name: 'kind',
+              in: 'query',
+              schema: { type: 'string', enum: ['income', 'expense'] },
+            },
+            { name: 'category_id', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          ],
+          responses: {
+            '200': {
+              description: 'Linhas do relatório por categoria',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/CategoryReportRow' },
+                      },
+                    },
+                    required: ['data'],
+                  },
+                },
+              },
+            },
+            '401': { $ref: '#/components/responses/UnauthorizedError' },
+            '403': { $ref: '#/components/responses/ForbiddenError' },
+          },
+        },
+      },
+    },
+    components: {
+      securitySchemes: {
+        ApiKeyAuth: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-API-Key',
+          description: 'API key obrigatória para todas as chamadas da API.',
+        },
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Access token do Supabase Auth.',
+        },
+      },
+      parameters: {
+        PathId: {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', format: 'uuid' },
+        },
+        Limit: {
+          name: 'limit',
+          in: 'query',
+          schema: { type: 'integer', minimum: 1, maximum: 500, default: 100 },
+        },
+        Offset: {
+          name: 'offset',
+          in: 'query',
+          schema: { type: 'integer', minimum: 0, default: 0 },
+        },
+        Cursor: {
+          name: 'cursor',
+          in: 'query',
+          schema: { type: 'string' },
+          description: 'Cursor opaco retornado pela paginação anterior.',
+        },
+        SortOrder: {
+          name: 'order',
+          in: 'query',
+          schema: { type: 'string', enum: ['asc', 'desc'], default: 'desc' },
+        },
+        AccountSort: {
+          name: 'sort',
+          in: 'query',
+          schema: {
+            type: 'string',
+            enum: ['created_at', 'name', 'initial_balance'],
+            default: 'created_at',
+          },
+        },
+        CategorySort: {
+          name: 'sort',
+          in: 'query',
+          schema: {
+            type: 'string',
+            enum: ['name', 'kind', 'created_at'],
+            default: 'name',
+          },
+        },
+        GoalSort: {
+          name: 'sort',
+          in: 'query',
+          schema: {
+            type: 'string',
+            enum: ['created_at', 'name', 'target_amount', 'current_amount', 'status'],
+            default: 'created_at',
+          },
+        },
+        TransactionSort: {
+          name: 'sort',
+          in: 'query',
+          schema: {
+            type: 'string',
+            enum: [
+              'occurs_on',
+              'created_at',
+              'amount_in_default_currency',
+              'description',
+              'type',
+            ],
+            default: 'occurs_on',
+          },
+        },
+        IdempotencyKey: {
+          name: 'Idempotency-Key',
+          in: 'header',
+          required: false,
+          schema: { type: 'string', minLength: 8, maxLength: 255 },
+          description:
+            'Chave opcional para tornar operações mutáveis idempotentes por usuário/método/rota.',
+        },
+      },
+      responses: {
+        UnauthorizedError: {
+          description: 'Não autenticado (API key ou Bearer token inválido/ausente)',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+            },
+          },
+        },
+        ForbiddenError: {
+          description: 'Sem permissão no módulo/ação',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+            },
+          },
+        },
+        NotFoundError: {
+          description: 'Recurso não encontrado',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+            },
+          },
+        },
+        ConflictError: {
+          description: 'Conflito de estado (ex: idempotência ou dados duplicados)',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+            },
+          },
+        },
+        ValidationError: {
+          description: 'Payload inválido',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' },
+            },
+          },
+        },
+      },
+      schemas: {
+        ErrorResponse: {
+          type: 'object',
+          properties: {
+            code: { type: 'string' },
+            error: { type: 'string' },
+            details: { nullable: true },
+          },
+          required: ['code', 'error'],
+        },
+        ChangelogEntry: {
+          type: 'object',
+          properties: {
+            version: { type: 'string' },
+            released_at: { type: 'string', format: 'date' },
+            summary: { type: 'string' },
+            changes: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
+          required: ['version', 'released_at', 'summary', 'changes'],
+        },
+        AuthLoginBody: {
+          type: 'object',
+          properties: {
+            email: { type: 'string', format: 'email' },
+            password: { type: 'string', minLength: 6 },
+          },
+          required: ['email', 'password'],
+          additionalProperties: false,
+        },
+        AuthRefreshBody: {
+          type: 'object',
+          properties: {
+            refresh_token: { type: 'string', minLength: 1 },
+          },
+          required: ['refresh_token'],
+          additionalProperties: false,
+        },
+        AuthLogoutBody: {
+          type: 'object',
+          properties: {
+            access_token: { type: 'string', minLength: 1 },
+            scope: {
+              type: 'string',
+              enum: ['global', 'local'],
+              default: 'global',
+            },
+          },
+          additionalProperties: false,
+        },
+        AuthSessionData: {
+          type: 'object',
+          properties: {
+            access_token: { type: 'string' },
+            refresh_token: { type: 'string', nullable: true },
+            expires_at: { type: 'integer', nullable: true },
+            token_type: { type: 'string', nullable: true, example: 'bearer' },
+            user: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid', nullable: true },
+                email: { type: 'string', format: 'email', nullable: true },
+              },
+              required: ['id', 'email'],
+            },
+          },
+          required: ['access_token', 'refresh_token', 'expires_at', 'token_type', 'user'],
+        },
+        AuthLogoutData: {
+          type: 'object',
+          properties: {
+            revoked: { type: 'boolean' },
+            scope: { type: 'string', enum: ['global', 'local'] },
+          },
+          required: ['revoked', 'scope'],
+        },
+        Pagination: {
+          type: 'object',
+          properties: {
+            limit: { type: 'integer' },
+            offset: { type: 'integer' },
+            total: { type: 'integer' },
+            sort: { type: 'string' },
+            order: { type: 'string', enum: ['asc', 'desc'] },
+            has_more: { type: 'boolean' },
+            next_cursor: { type: 'string', nullable: true },
+          },
+          required: ['limit', 'offset', 'total', 'sort', 'order', 'has_more', 'next_cursor'],
+        },
+        Preferences: {
+          type: 'object',
+          properties: {
+            user_id: { type: 'string', format: 'uuid' },
+            default_currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            locale: { type: 'string' },
+            session_max_hours: { type: 'integer' },
+          },
+          required: ['user_id', 'default_currency', 'locale', 'session_max_hours'],
+        },
+        PreferencesPatch: {
+          type: 'object',
+          properties: {
+            default_currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            locale: { type: 'string' },
+            session_max_hours: { type: 'integer', minimum: 1, maximum: 24 },
+          },
+          additionalProperties: false,
+        },
+        DashboardSummary: {
+          type: 'object',
+          properties: {
+            period: {
+              type: 'object',
+              properties: {
+                from: { type: 'string', format: 'date' },
+                to: { type: 'string', format: 'date' },
+              },
+              required: ['from', 'to'],
+            },
+            totals: {
+              type: 'object',
+              properties: {
+                income: { type: 'number' },
+                expense: { type: 'number' },
+                transfer_volume: { type: 'number' },
+                net: { type: 'number' },
+              },
+              required: ['income', 'expense', 'transfer_volume', 'net'],
+            },
+            accounts: {
+              type: 'object',
+              properties: {
+                total: { type: 'integer' },
+                active: { type: 'integer' },
+                archived: { type: 'integer' },
+                initial_balance_total: { type: 'number' },
+              },
+              required: ['total', 'active', 'archived', 'initial_balance_total'],
+            },
+            goals: {
+              type: 'object',
+              properties: {
+                total: { type: 'integer' },
+                active: { type: 'integer' },
+                achieved: { type: 'integer' },
+                target_total: { type: 'number' },
+                current_total: { type: 'number' },
+              },
+              required: ['total', 'active', 'achieved', 'target_total', 'current_total'],
+            },
+            transactions: {
+              type: 'object',
+              properties: {
+                total_in_period: { type: 'integer' },
+                latest: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Transaction' },
+                },
+                largest_income: {
+                  anyOf: [
+                    { $ref: '#/components/schemas/Transaction' },
+                    { type: 'null' },
+                  ],
+                },
+                largest_expense: {
+                  anyOf: [
+                    { $ref: '#/components/schemas/Transaction' },
+                    { type: 'null' },
+                  ],
+                },
+              },
+              required: ['total_in_period', 'latest', 'largest_income', 'largest_expense'],
+            },
+          },
+          required: ['period', 'totals', 'accounts', 'goals', 'transactions'],
+        },
+        Account: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            user_id: { type: 'string', format: 'uuid' },
+            name: { type: 'string' },
+            type: {
+              type: 'string',
+              enum: ['checking', 'savings', 'cash', 'credit', 'investment', 'other'],
+            },
+            currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            initial_balance: { type: 'number' },
+            logo_path: { type: 'string', nullable: true },
+            is_archived: { type: 'boolean' },
+            created_at: { type: 'string', format: 'date-time' },
+          },
+          required: ['id', 'user_id', 'name', 'type', 'currency', 'initial_balance', 'is_archived'],
+        },
+        AccountCreate: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', minLength: 2, maxLength: 120 },
+            type: {
+              type: 'string',
+              enum: ['checking', 'savings', 'cash', 'credit', 'investment', 'other'],
+            },
+            currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            initial_balance: { type: 'number' },
+            logo_path: { type: 'string', nullable: true },
+            is_archived: { type: 'boolean' },
+          },
+          required: ['name'],
+        },
+        AccountPatch: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', minLength: 2, maxLength: 120 },
+            type: {
+              type: 'string',
+              enum: ['checking', 'savings', 'cash', 'credit', 'investment', 'other'],
+            },
+            currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            initial_balance: { type: 'number' },
+            logo_path: { type: 'string', nullable: true },
+            is_archived: { type: 'boolean' },
+          },
+          additionalProperties: false,
+        },
+        Category: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            user_id: { type: 'string', format: 'uuid' },
+            name: { type: 'string' },
+            kind: { type: 'string', enum: ['income', 'expense'] },
+            color: { type: 'string' },
+            icon: { type: 'string' },
+            is_system: { type: 'boolean' },
+          },
+          required: ['id', 'user_id', 'name', 'kind', 'color', 'icon', 'is_system'],
+        },
+        CategoryCreate: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', minLength: 2, maxLength: 120 },
+            kind: { type: 'string', enum: ['income', 'expense'] },
+            color: { type: 'string' },
+            icon: { type: 'string' },
+            is_system: { type: 'boolean' },
+          },
+          required: ['name', 'kind'],
+        },
+        CategoryPatch: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', minLength: 2, maxLength: 120 },
+            kind: { type: 'string', enum: ['income', 'expense'] },
+            color: { type: 'string' },
+            icon: { type: 'string' },
+            is_system: { type: 'boolean' },
+          },
+          additionalProperties: false,
+        },
+        Goal: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            user_id: { type: 'string', format: 'uuid' },
+            name: { type: 'string' },
+            target_amount: { type: 'number' },
+            current_amount: { type: 'number' },
+            currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            target_date: { type: 'string', format: 'date', nullable: true },
+            status: { type: 'string', enum: ['active', 'achieved', 'paused', 'cancelled'] },
+            notes: { type: 'string', nullable: true },
+          },
+          required: ['id', 'user_id', 'name', 'target_amount', 'current_amount', 'currency', 'status'],
+        },
+        GoalCreate: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', minLength: 3, maxLength: 160 },
+            target_amount: { type: 'number', exclusiveMinimum: 0 },
+            current_amount: { type: 'number', minimum: 0 },
+            currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            target_date: { type: 'string', format: 'date', nullable: true },
+            status: { type: 'string', enum: ['active', 'achieved', 'paused', 'cancelled'] },
+            notes: { type: 'string', nullable: true },
+          },
+          required: ['name', 'target_amount'],
+        },
+        GoalPatch: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', minLength: 3, maxLength: 160 },
+            target_amount: { type: 'number', exclusiveMinimum: 0 },
+            current_amount: { type: 'number', minimum: 0 },
+            currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            target_date: { type: 'string', format: 'date', nullable: true },
+            status: { type: 'string', enum: ['active', 'achieved', 'paused', 'cancelled'] },
+            notes: { type: 'string', nullable: true },
+          },
+          additionalProperties: false,
+        },
+        Transaction: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            user_id: { type: 'string', format: 'uuid' },
+            account_id: { type: 'string', format: 'uuid' },
+            transfer_account_id: { type: 'string', format: 'uuid', nullable: true },
+            category_id: { type: 'string', format: 'uuid', nullable: true },
+            goal_id: { type: 'string', format: 'uuid', nullable: true },
+            type: { type: 'string', enum: ['income', 'expense', 'transfer'] },
+            description: { type: 'string' },
+            notes: { type: 'string', nullable: true },
+            amount: { type: 'number' },
+            currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            amount_in_default_currency: { type: 'number' },
+            default_currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            exchange_rate: { type: 'number' },
+            occurs_on: { type: 'string', format: 'date' },
+            attachment_path: { type: 'string', nullable: true },
+            recurrence_frequency: {
+              type: 'string',
+              enum: ['none', 'daily', 'weekly', 'monthly', 'yearly'],
+            },
+            recurrence_interval: { type: 'integer' },
+            recurrence_end_date: { type: 'string', format: 'date', nullable: true },
+            installment_group_id: { type: 'string', format: 'uuid', nullable: true },
+            installment_number: { type: 'integer', nullable: true },
+            installment_total: { type: 'integer', nullable: true },
+            created_at: { type: 'string', format: 'date-time' },
+          },
+          required: [
+            'id',
+            'user_id',
+            'account_id',
+            'type',
+            'description',
+            'amount',
+            'currency',
+            'amount_in_default_currency',
+            'default_currency',
+            'exchange_rate',
+            'occurs_on',
+            'recurrence_frequency',
+            'recurrence_interval',
+          ],
+        },
+        TransactionCreate: {
+          type: 'object',
+          properties: {
+            account_id: { type: 'string', format: 'uuid' },
+            transfer_account_id: { type: 'string', format: 'uuid', nullable: true },
+            category_id: { type: 'string', format: 'uuid', nullable: true },
+            goal_id: { type: 'string', format: 'uuid', nullable: true },
+            type: { type: 'string', enum: ['income', 'expense', 'transfer'] },
+            description: { type: 'string', minLength: 2, maxLength: 200 },
+            notes: { type: 'string', nullable: true },
+            amount: { type: 'number', exclusiveMinimum: 0 },
+            currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            default_currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            exchange_rate: { type: 'number', exclusiveMinimum: 0 },
+            occurs_on: { type: 'string', format: 'date' },
+            attachment_path: { type: 'string', nullable: true },
+            recurrence_frequency: {
+              type: 'string',
+              enum: ['none', 'daily', 'weekly', 'monthly', 'yearly'],
+            },
+            recurrence_interval: { type: 'integer', minimum: 1 },
+            recurrence_end_date: { type: 'string', format: 'date', nullable: true },
+            installments: { type: 'integer', minimum: 1, maximum: 120 },
+          },
+          required: ['account_id', 'type', 'description', 'amount', 'occurs_on'],
+        },
+        TransactionPatch: {
+          type: 'object',
+          properties: {
+            account_id: { type: 'string', format: 'uuid' },
+            transfer_account_id: { type: 'string', format: 'uuid', nullable: true },
+            category_id: { type: 'string', format: 'uuid', nullable: true },
+            goal_id: { type: 'string', format: 'uuid', nullable: true },
+            type: { type: 'string', enum: ['income', 'expense', 'transfer'] },
+            description: { type: 'string', minLength: 2, maxLength: 200 },
+            notes: { type: 'string', nullable: true },
+            amount: { type: 'number', exclusiveMinimum: 0 },
+            currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            default_currency: { type: 'string', pattern: '^[A-Z]{3}$' },
+            exchange_rate: { type: 'number', exclusiveMinimum: 0 },
+            occurs_on: { type: 'string', format: 'date' },
+            attachment_path: { type: 'string', nullable: true },
+            recurrence_frequency: {
+              type: 'string',
+              enum: ['none', 'daily', 'weekly', 'monthly', 'yearly'],
+            },
+            recurrence_interval: { type: 'integer', minimum: 1 },
+            recurrence_end_date: { type: 'string', format: 'date', nullable: true },
+          },
+          additionalProperties: false,
+        },
+        MonthlyReportRow: {
+          type: 'object',
+          properties: {
+            user_id: { type: 'string', format: 'uuid' },
+            month_start: { type: 'string', format: 'date' },
+            currency: { type: 'string' },
+            total_income: { type: 'number' },
+            total_expense: { type: 'number' },
+            net_result: { type: 'number' },
+          },
+          required: [
+            'user_id',
+            'month_start',
+            'currency',
+            'total_income',
+            'total_expense',
+            'net_result',
+          ],
+        },
+        CategoryReportRow: {
+          type: 'object',
+          properties: {
+            user_id: { type: 'string', format: 'uuid' },
+            month_start: { type: 'string', format: 'date' },
+            category_id: { type: 'string', format: 'uuid' },
+            category_name: { type: 'string' },
+            kind: { type: 'string', enum: ['income', 'expense'] },
+            currency: { type: 'string' },
+            total_amount: { type: 'number' },
+          },
+          required: [
+            'user_id',
+            'month_start',
+            'category_id',
+            'category_name',
+            'kind',
+            'currency',
+            'total_amount',
+          ],
+        },
+      },
+    },
+  }
+}

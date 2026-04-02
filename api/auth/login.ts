@@ -1,0 +1,56 @@
+import { createClient } from '@supabase/supabase-js'
+import { z } from 'zod'
+import { serializeAuthSession } from '../../src/core/auth-session'
+import { AppError } from '../../src/core/errors'
+import { env } from '../../src/core/env'
+import {
+  createPublicHandler,
+  jsonResponse,
+  parseJsonBody,
+} from '../../src/core/http'
+
+const authLoginSchema = z.object({
+  email: z.email(),
+  password: z.string().min(6),
+})
+
+const sharedAuthOptions = {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+}
+
+export default createPublicHandler(
+  { methods: ['POST'] },
+  async ({ req, res }) => {
+    const payload = authLoginSchema.parse(await parseJsonBody(req))
+
+    const supabase = createClient(
+      env.supabaseUrl,
+      env.supabaseAnonKey,
+      sharedAuthOptions,
+    )
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: payload.email,
+      password: payload.password,
+    })
+
+    if (error || !data.session?.access_token) {
+      throw new AppError(
+        401,
+        error?.message || 'Falha ao autenticar no Supabase.',
+        undefined,
+        'AUTH_LOGIN_FAILED',
+      )
+    }
+
+    jsonResponse(res, 200, {
+      data: {
+        ...serializeAuthSession(data.session, data.user),
+      },
+    })
+  },
+)
