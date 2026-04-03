@@ -3,15 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Financial Organization API</title>
+    <title>My Financial Organization :: Technical Runtime</title>
     <style>
       :root {
-        --bg: #0b1020;
-        --panel: #111a33;
-        --text: #e9eefc;
-        --muted: #a8b4d8;
-        --accent: #55d6be;
-        --line: #253456;
+        --purple: #820ad1;
+        --purple-deep: #5b0892;
+        --panel: #f8f1ff;
+        --panel-2: #f2e6ff;
+        --ink: #1e1e1e;
+        --muted: #5c5c5c;
+        --line: #d1b3ea;
+        --ok: #0f9d58;
       }
 
       * {
@@ -21,99 +23,311 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-        color: var(--text);
-        background:
-          radial-gradient(circle at 20% 10%, #1c2b52 0%, transparent 35%),
-          radial-gradient(circle at 80% 90%, #163d46 0%, transparent 30%),
-          var(--bg);
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        background: linear-gradient(180deg, var(--purple) 0%, var(--purple-deep) 100%);
       }
 
       main {
-        max-width: 840px;
-        margin: 40px auto;
-        padding: 24px;
+        max-width: 1080px;
+        margin: 26px auto;
+        padding: 0 14px;
       }
 
-      .card {
-        background: color-mix(in srgb, var(--panel), black 10%);
+      .panel {
+        background: var(--panel);
         border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 20px;
-        margin-bottom: 16px;
+        border-radius: 2px;
+        padding: 18px;
+        margin-bottom: 10px;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
       }
 
       h1 {
-        margin: 0 0 8px;
-        font-size: 1.7rem;
-        letter-spacing: 0.3px;
+        margin: 0;
+        font-size: 1.4rem;
+        letter-spacing: 0.2px;
+        font-weight: 700;
       }
 
       p {
-        margin: 8px 0;
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        border-radius: 2px;
+        border: 1px solid #bfe9d0;
+        background: #ecfff3;
+        color: #116d3f;
+        font-size: 0.82rem;
+        white-space: nowrap;
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        background: var(--ok);
+        border-radius: 1px;
+      }
+
+      .meta {
+        margin-top: 12px;
+        border-top: 1px solid var(--line);
+        padding-top: 12px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 210px 1fr;
+        gap: 10px;
+        align-items: baseline;
+      }
+
+      .key {
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.86rem;
+        color: #444;
+      }
+
+      .value {
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.88rem;
+        color: #111;
+      }
+
+      .section-title {
+        margin: 0 0 10px;
+        font-size: 0.88rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #4a2b63;
+        font-weight: 700;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .spec {
+        margin: 0;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.83rem;
+        line-height: 1.5;
+        color: #1f1f1f;
+        white-space: pre-wrap;
+      }
+
+      .small {
+        font-size: 0.82rem;
         color: var(--muted);
       }
 
-      .pill {
-        display: inline-block;
-        margin-right: 8px;
-        margin-top: 8px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        border: 1px solid var(--line);
-        color: var(--accent);
-        font-size: 0.84rem;
-      }
+      @media (max-width: 840px) {
+        .top {
+          flex-direction: column;
+          align-items: flex-start;
+        }
 
-      ul {
-        margin: 0;
-        padding-left: 18px;
-      }
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
 
-      li {
-        margin: 8px 0;
-      }
-
-      code {
-        font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
-        color: #c6f7ed;
-      }
-
-      a {
-        color: #9ed6ff;
-        text-decoration: none;
-      }
-
-      a:hover {
-        text-decoration: underline;
+        .row {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
       }
     </style>
   </head>
   <body>
     <main>
-      <section class="card">
-        <h1>My Financial Organization API</h1>
-        <p>API em produção e roteamento ativo.</p>
-        <span class="pill">Status: online</span>
-        <span class="pill">Base: <code>/api</code></span>
-      </section>
+      <section class="panel">
+        <div class="top">
+          <h1>My Financial Organization :: API Runtime</h1>
+          <div class="status">
+            <span class="dot"></span>
+            <span>service online</span>
+          </div>
+        </div>
 
-      <section class="card">
-        <p>Endpoints públicos:</p>
-        <ul>
-          <li><a href="/api">GET /api</a></li>
-          <li><a href="/api/health">GET /api/health</a></li>
-          <li><a href="/api/openapi.json">GET /api/openapi.json</a></li>
-          <li><a href="/api/changelog">GET /api/changelog</a></li>
-        </ul>
-      </section>
-
-      <section class="card">
-        <p>Observação:</p>
         <p>
-          Esta API exige <code>X-API-Key</code> e, para rotas privadas, também
-          <code>Authorization: Bearer &lt;token&gt;</code>.
+          Backend de produção para operações financeiras, autenticação e
+          controle de acesso.
         </p>
+
+        <div class="meta">
+          <div class="row">
+            <div class="key">environment</div>
+            <div class="value">production</div>
+          </div>
+          <div class="row">
+            <div class="key">runtime</div>
+            <div class="value">serverless node</div>
+          </div>
+          <div class="row">
+            <div class="key">gateway</div>
+            <div class="value">api key + bearer token</div>
+          </div>
+          <div class="row">
+            <div class="key">transport</div>
+            <div class="value">stateless HTTP JSON interface</div>
+          </div>
+          <div class="row">
+            <div class="key">api_version</div>
+            <div class="value">v1.2.0 (released_at=2026-04-02)</div>
+          </div>
+          <div class="row">
+            <div class="key">contract_stats</div>
+            <div class="value">paths=21 | operations=34 | methods={GET:18, POST:7, PATCH:5, DELETE:4}</div>
+          </div>
+          <div class="row">
+            <div class="key">language/toolchain</div>
+            <div class="value">TypeScript 5.9.3 | Node.js | Vercel Functions | Supabase</div>
+          </div>
+          <div class="row">
+            <div class="key">sdk_pipeline</div>
+            <div class="value">OpenAPI export -> typed SDK generation (openapi-typescript-codegen)</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid-2">
+        <article class="panel">
+          <h2 class="section-title">Execution Profile</h2>
+          <div class="meta" style="margin-top: 0; border-top: 0; padding-top: 0">
+            <div class="row"><div class="key">router_mode</div><div class="value">single entrypoint dispatcher + lazy module loading cache</div></div>
+            <div class="row"><div class="key">cold_start_strategy</div><div class="value">dynamic import per route + handler promise memoization</div></div>
+            <div class="row"><div class="key">request_parsing</div><div class="value">URL parse with x-forwarded-proto fallback + query normalization</div></div>
+            <div class="row"><div class="key">method_gate</div><div class="value">strict allow-list per handler (405 + Allow header)</div></div>
+            <div class="row"><div class="key">error_mapping</div><div class="value">ZodError -> 422 | AppError -> mapped status | fallback -> 500</div></div>
+            <div class="row"><div class="key">cors_model</div><div class="value">origin configurable + explicit headers + OPTIONS 204 short-circuit</div></div>
+            <div class="row"><div class="key">response_content</div><div class="value">JSON envelopes with stable code/error/details payload contract</div></div>
+          </div>
+        </article>
+
+        <article class="panel" style="background: var(--panel-2)">
+          <h2 class="section-title">Security Posture</h2>
+          <div class="meta" style="margin-top: 0; border-top: 0; padding-top: 0">
+            <div class="row"><div class="key">api_key_check</div><div class="value">timing-safe secret comparison (timingSafeEqual)</div></div>
+            <div class="row"><div class="key">auth_chain</div><div class="value">X-API-Key mandatory + Bearer token mandatory on business routes</div></div>
+            <div class="row"><div class="key">security_headers</div><div class="value">X-Content-Type-Options, X-Frame-Options, CSP, HSTS, Permissions-Policy</div></div>
+            <div class="row"><div class="key">csp_policy</div><div class="value">default-src 'none'; frame-ancestors 'none'</div></div>
+            <div class="row"><div class="key">rls</div><div class="value">row-level security policies enabled across finance tables</div></div>
+            <div class="row"><div class="key">idempotency_conflict</div><div class="value">reused key with divergent payload => HTTP 409</div></div>
+            <div class="row"><div class="key">session_revoke</div><div class="value">logout endpoint forwards to Supabase auth revocation API</div></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Domain And Data Contracts</h2>
+        <div class="meta" style="margin-top: 0; border-top: 0; padding-top: 0">
+          <div class="row"><div class="key">bounded_modules</div><div class="value">dashboard, transactions, categories, accounts, goals, reports, users</div></div>
+          <div class="row"><div class="key">permission_actions</div><div class="value">view, list, create, edit, delete</div></div>
+          <div class="row"><div class="key">transaction_types</div><div class="value">income | expense | transfer</div></div>
+          <div class="row"><div class="key">recurrence_freq</div><div class="value">none | daily | weekly | monthly | yearly</div></div>
+          <div class="row"><div class="key">goal_status</div><div class="value">active | achieved | paused | cancelled</div></div>
+          <div class="row"><div class="key">account_types</div><div class="value">checking | savings | cash | credit | investment | other</div></div>
+          <div class="row"><div class="key">currency_rule</div><div class="value">ISO-4217 code, uppercase, fixed 3 letters</div></div>
+          <div class="row"><div class="key">date_rule</div><div class="value">strict YYYY-MM-DD regex gate</div></div>
+          <div class="row"><div class="key">pagination_limits</div><div class="value">limit min=1 max=500 | offset min=0 | cursor optional</div></div>
+          <div class="row"><div class="key">installments_rule</div><div class="value">installments min=1 max=120</div></div>
+          <div class="row"><div class="key">session_policy</div><div class="value">session_max_hours range: 1..24</div></div>
+          <div class="row"><div class="key">notes_capacity</div><div class="value">nullable text up to 4000 chars</div></div>
+          <div class="row"><div class="key">uuid_policy</div><div class="value">resource identity guarded by uuid schema everywhere</div></div>
+        </div>
+      </section>
+
+      <section class="grid-2">
+        <article class="panel">
+          <h2 class="section-title">Storage Topology</h2>
+          <pre class="spec">postgres entities:
+  - user_preferences
+  - accounts
+  - categories
+  - goals
+  - transactions
+  - user_profiles
+  - user_module_permissions
+  - idempotency_requests
+
+reporting relations:
+  - monthly_report
+  - category_report
+
+object storage:
+  - receipts bucket (scoped ownership policies)</pre>
+        </article>
+
+        <article class="panel" style="background: var(--panel-2)">
+          <h2 class="section-title">Migrations Timeline</h2>
+          <pre class="spec">20260319011500_init_financial_system.sql
+  + enum domains for account/transaction/category/goal/recurrence
+  + core financial tables + indexes + RLS policies
+
+20260319040000_access_control_users.sql
+  + user_profiles + user_module_permissions
+  + admin rpc functions for user lifecycle/access
+
+20260319053000_user_phone_access_update.sql
+  + access control evolution
+
+20260319070000_account_logos_ptbr_defaults.sql
+  + account logo defaults and locale adjustments
+
+20260402010000_idempotency_requests.sql
+  + request fingerprint storage + 24h expiration window</pre>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">HTTP And Cache Policy Matrix</h2>
+        <pre class="spec">cache classes:
+  metadata_class_A -> s-maxage=300, stale-while-revalidate=3600
+  metadata_class_B -> s-maxage=600, stale-while-revalidate=3600
+  heartbeat_class  -> s-maxage=30,  stale-while-revalidate=60
+  stateful_ops     -> no-store
+
+method profile:
+  read operations  -> GET
+  write operations -> POST|PATCH|DELETE
+
+idempotency behavior:
+  eligible methods = POST|PATCH|PUT|DELETE
+  key header       = Idempotency-Key
+  fingerprint      = sha256(method|route|stable_body)
+  replay marker    = Idempotency-Replayed: true
+  ttl              = 24h</pre>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Operational Notes</h2>
+        <div class="meta" style="margin-top: 0; border-top: 0; padding-top: 0">
+          <div class="row"><div class="key">deployment_target</div><div class="value">Vercel Hobby-compatible (single serverless function dispatch)</div></div>
+          <div class="row"><div class="key">build_guardrails</div><div class="value">typecheck gate + eslint + vitest suite</div></div>
+          <div class="row"><div class="key">observability_mode</div><div class="value">runtime logs + deployment logs + explicit error codes</div></div>
+          <div class="row"><div class="key">consumer_interfaces</div><div class="value">HTTP clients, generated SDK, docs UI, automated agents</div></div>
+          <div class="row"><div class="key">failure_contract</div><div class="value">{ code, error, details } deterministic payload in all API layers</div></div>
+          <div class="row"><div class="key">intended_audience</div><div class="value">backend, platform, data and integration engineering</div></div>
+        </div>
+        <p class="small">Interface intentionally technical. Non-authenticated human browsing is not the primary product surface.</p>
       </section>
     </main>
   </body>
