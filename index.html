@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Financial Organization API</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #111a33;
+        --text: #e9eefc;
+        --muted: #a8b4d8;
+        --accent: #55d6be;
+        --line: #253456;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 20% 10%, #1c2b52 0%, transparent 35%),
+          radial-gradient(circle at 80% 90%, #163d46 0%, transparent 30%),
+          var(--bg);
+      }
+
+      main {
+        max-width: 840px;
+        margin: 40px auto;
+        padding: 24px;
+      }
+
+      .card {
+        background: color-mix(in srgb, var(--panel), black 10%);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.7rem;
+        letter-spacing: 0.3px;
+      }
+
+      p {
+        margin: 8px 0;
+        color: var(--muted);
+      }
+
+      .pill {
+        display: inline-block;
+        margin-right: 8px;
+        margin-top: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        color: var(--accent);
+        font-size: 0.84rem;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      li {
+        margin: 8px 0;
+      }
+
+      code {
+        font-family: "IBM Plex Mono", "JetBrains Mono", monospace;
+        color: #c6f7ed;
+      }
+
+      a {
+        color: #9ed6ff;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <h1>My Financial Organization API</h1>
+        <p>API em produção e roteamento ativo.</p>
+        <span class="pill">Status: online</span>
+        <span class="pill">Base: <code>/api</code></span>
+      </section>
+
+      <section class="card">
+        <p>Endpoints públicos:</p>
+        <ul>
+          <li><a href="/api">GET /api</a></li>
+          <li><a href="/api/health">GET /api/health</a></li>
+          <li><a href="/api/openapi.json">GET /api/openapi.json</a></li>
+          <li><a href="/api/changelog">GET /api/changelog</a></li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <p>Observação:</p>
+        <p>
+          Esta API exige <code>X-API-Key</code> e, para rotas privadas, também
+          <code>Authorization: Bearer &lt;token&gt;</code>.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
