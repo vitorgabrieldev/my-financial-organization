@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { transactionCreateSchema } from './schemas'
+import { transactionCreateSchema } from './schemas.js'
 
 describe('transactionCreateSchema', () => {
   it('rejeita transferências sem conta de destino', () => {

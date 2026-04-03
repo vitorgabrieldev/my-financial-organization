@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildTransactionDates } from './transactions'
+import { buildTransactionDates } from './transactions.js'
 
 describe('buildTransactionDates', () => {
   it('gera parcelas mensais', () => {

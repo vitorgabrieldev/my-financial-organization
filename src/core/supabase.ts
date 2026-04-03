@@ -3,8 +3,8 @@ import {
   type SupabaseClient,
   type User,
 } from '@supabase/supabase-js'
-import { assertEnv, env } from './env'
-import { AppError, UnauthorizedError } from './errors'
+import { assertEnv, env } from './env.js'
+import { AppError, UnauthorizedError } from './errors.js'
 
 assertEnv()
 

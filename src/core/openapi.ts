@@ -1,4 +1,4 @@
-import { API_CURRENT_VERSION } from './changelog'
+import { API_CURRENT_VERSION } from './changelog.js'
 
 const dataEnvelope = (schemaRef: string) => ({
   type: 'object',

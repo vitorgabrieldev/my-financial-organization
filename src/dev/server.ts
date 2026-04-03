@@ -5,7 +5,7 @@ import express, {
   type Response,
 } from 'express'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { routeApiRequest } from '../routes/router'
+import { routeApiRequest } from '../routes/router.js'
 
 type ApiHandler = (
   req: VercelRequest,

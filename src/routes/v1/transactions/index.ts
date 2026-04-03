@@ -1,21 +1,21 @@
 import { randomUUID } from 'node:crypto'
-import { AppError, ValidationError } from '../../../core/errors'
+import { AppError, ValidationError } from '../../../core/errors.js'
 import {
   createAuthHandler,
   jsonResponse,
   parseJsonBody,
   queryToObject,
-} from '../../../core/http'
-import { roundMoney } from '../../../core/number'
-import { buildPagination, resolvePagination } from '../../../core/pagination'
-import { requireModulePermission } from '../../../core/permissions'
+} from '../../../core/http.js'
+import { roundMoney } from '../../../core/number.js'
+import { buildPagination, resolvePagination } from '../../../core/pagination.js'
+import { requireModulePermission } from '../../../core/permissions.js'
 import {
   TRANSACTION_SORT_FIELDS,
   transactionCreateSchema,
   transactionListQuerySchema,
   type TransactionCreateInput,
-} from '../../../core/schemas'
-import { buildTransactionDates } from '../../../core/transactions'
+} from '../../../core/schemas.js'
+import { buildTransactionDates } from '../../../core/transactions.js'
 
 const resolveConversion = (payload: {
   amount: number

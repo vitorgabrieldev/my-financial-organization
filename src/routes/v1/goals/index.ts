@@ -1,17 +1,17 @@
-import { AppError } from '../../../core/errors'
+import { AppError } from '../../../core/errors.js'
 import {
   createAuthHandler,
   jsonResponse,
   parseJsonBody,
   queryToObject,
-} from '../../../core/http'
-import { buildPagination, resolvePagination } from '../../../core/pagination'
-import { requireModulePermission } from '../../../core/permissions'
+} from '../../../core/http.js'
+import { buildPagination, resolvePagination } from '../../../core/pagination.js'
+import { requireModulePermission } from '../../../core/permissions.js'
 import {
   GOAL_SORT_FIELDS,
   goalCreateSchema,
   goalListQuerySchema,
-} from '../../../core/schemas'
+} from '../../../core/schemas.js'
 
 const goalSortColumnMap: Record<(typeof GOAL_SORT_FIELDS)[number], string> = {
   created_at: 'created_at',

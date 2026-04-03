@@ -6,7 +6,7 @@ import {
   RECURRENCE_FREQUENCIES,
   TRANSACTION_TYPES,
   type TransactionType,
-} from './types'
+} from './types.js'
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/
 

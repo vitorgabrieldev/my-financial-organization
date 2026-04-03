@@ -1,4 +1,4 @@
-import { AppError } from './errors'
+import { AppError } from './errors.js'
 
 const readEnv = (key: string): string => {
   const value = process.env[key]?.trim()

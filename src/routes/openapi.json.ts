@@ -1,5 +1,5 @@
-import { createPublicHandler, jsonResponse } from '../core/http'
-import { createOpenApiSpec } from '../core/openapi'
+import { createPublicHandler, jsonResponse } from '../core/http.js'
+import { createOpenApiSpec } from '../core/openapi.js'
 
 export default createPublicHandler(
   { methods: ['GET'] },

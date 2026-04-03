@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { VercelRequest } from '@vercel/node'
-import { AppError } from './errors'
+import { AppError } from './errors.js'
 
 const IDEMPOTENCY_HEADER = 'idempotency-key'
 

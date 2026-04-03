@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { routeApiRequest } from '../src/routes/router'
+import { routeApiRequest } from '../src/routes/router.js'
 
 export default async function handler(
   req: VercelRequest,

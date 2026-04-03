@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { AppError, ForbiddenError } from './errors'
-import type { AppModule, PermissionAction } from './types'
+import { AppError, ForbiddenError } from './errors.js'
+import type { AppModule, PermissionAction } from './types.js'
 
 const actionColumnMap: Record<PermissionAction, string> = {
   view: 'can_view',

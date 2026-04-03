@@ -1,17 +1,17 @@
-import { AppError, NotFoundError, ValidationError } from '../../../core/errors'
+import { AppError, NotFoundError, ValidationError } from '../../../core/errors.js'
 import {
   createAuthHandler,
   jsonResponse,
   parseJsonBody,
-} from '../../../core/http'
-import { roundMoney, toNumber } from '../../../core/number'
-import { requireModulePermission } from '../../../core/permissions'
+} from '../../../core/http.js'
+import { roundMoney, toNumber } from '../../../core/number.js'
+import { requireModulePermission } from '../../../core/permissions.js'
 import {
   idParamSchema,
   transactionPatchSchema,
   validateMergedTransaction,
   type TransactionPatchInput,
-} from '../../../core/schemas'
+} from '../../../core/schemas.js'
 
 const readId = (value: string | string[] | undefined, requestUrl?: string): string => {
   const raw = Array.isArray(value) ? value[0] : value

@@ -1,17 +1,17 @@
-import { AppError } from '../../../core/errors'
+import { AppError } from '../../../core/errors.js'
 import {
   createAuthHandler,
   jsonResponse,
   parseJsonBody,
   queryToObject,
-} from '../../../core/http'
-import { buildPagination, resolvePagination } from '../../../core/pagination'
-import { requireModulePermission } from '../../../core/permissions'
+} from '../../../core/http.js'
+import { buildPagination, resolvePagination } from '../../../core/pagination.js'
+import { requireModulePermission } from '../../../core/permissions.js'
 import {
   CATEGORY_SORT_FIELDS,
   categoryCreateSchema,
   categoryListQuerySchema,
-} from '../../../core/schemas'
+} from '../../../core/schemas.js'
 
 const categorySortColumnMap: Record<(typeof CATEGORY_SORT_FIELDS)[number], string> = {
   name: 'name',

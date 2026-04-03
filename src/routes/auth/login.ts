@@ -1,13 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import { z } from 'zod'
-import { serializeAuthSession } from '../../core/auth-session'
-import { AppError } from '../../core/errors'
-import { env } from '../../core/env'
+import { serializeAuthSession } from '../../core/auth-session.js'
+import { AppError } from '../../core/errors.js'
+import { env } from '../../core/env.js'
 import {
   createPublicHandler,
   jsonResponse,
   parseJsonBody,
-} from '../../core/http'
+} from '../../core/http.js'
 
 const authLoginSchema = z.object({
   email: z.email(),

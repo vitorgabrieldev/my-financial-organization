@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   getCacheControlForRoute,
   resolveApiRoute,
-} from './router'
+} from './router.js'
 
 describe('resolveApiRoute', () => {
   it('resolves root route with and without trailing slash', () => {

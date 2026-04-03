@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { AppError } from './errors'
+import { AppError } from './errors.js'
 
 export const SORT_ORDERS = ['asc', 'desc'] as const
 export type SortOrder = (typeof SORT_ORDERS)[number]

@@ -6,7 +6,7 @@ import {
   isAfter,
   parseISO,
 } from 'date-fns'
-import type { RecurrenceFrequency } from './types'
+import type { RecurrenceFrequency } from './types.js'
 
 const MAX_OCCURRENCES = 120
 

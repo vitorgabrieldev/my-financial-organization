@@ -2,14 +2,14 @@ import { timingSafeEqual } from 'node:crypto'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ZodError } from 'zod'
-import { env } from './env'
-import { AppError, UnauthorizedError } from './errors'
+import { env } from './env.js'
+import { AppError, UnauthorizedError } from './errors.js'
 import {
   readCachedIdempotencyResponse,
   resolveAuthIdempotencyContext,
   storeIdempotencyResponse,
-} from './idempotency'
-import { authenticateToken } from './supabase'
+} from './idempotency.js'
+import { authenticateToken } from './supabase.js'
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
 
