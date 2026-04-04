@@ -16,7 +16,7 @@ export function LoginForm() {
 
     try {
       setPending(true)
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/internal/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

@@ -7,12 +7,14 @@ Frontend privado (Next.js) para consumo seguro do `api.financial-core`.
 - Renderizar interface web do sistema financeiro.
 - Consumir o backend sem expor `CORE_API_KEY` no navegador.
 - Manter sessão do usuário com cookies `httpOnly`.
+- Garantir que a API pública continue acessível somente em `/api/*`.
 
 ## Stack
 
 - Next.js (App Router)
 - React
-- Route Handlers como BFF (`/api/*` interno)
+- Route Handlers como BFF (`/internal/*`)
+- API pública atendida por `GET|POST|PATCH|PUT|DELETE /api/*`
 
 ## Variáveis de ambiente
 
@@ -45,11 +47,14 @@ Para sobrescrever a URL da API, use variável de ambiente:
 CORE_API_BASE_URL=https://sua-api-de-homologacao.com npm run dev
 ```
 
+No `development`, o Next também reescreve `/api/*` para `CORE_API_BASE_URL`,
+mantendo o mesmo contrato de rota da produção.
+
 ## Segurança aplicada
 
 - `CORE_API_KEY` usada apenas server-side.
-- Login via `/api/auth/login` (BFF) e cookies `httpOnly`.
-- Proxy seguro via `/api/core/[...path]` para chamadas autenticadas do frontend.
+- Login via `/internal/auth/login` (BFF) e cookies `httpOnly`.
+- Proxy seguro via `/internal/core/[...path]` para chamadas autenticadas do frontend.
 - Browser nunca recebe segredo do backend.
 
 ## Rotas web iniciais

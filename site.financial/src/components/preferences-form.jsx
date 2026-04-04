@@ -21,7 +21,7 @@ export function PreferencesForm({ initial }) {
     }
 
     try {
-      const response = await fetch('/api/core/v1/preferences', {
+      const response = await fetch('/internal/core/v1/preferences', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

@@ -1,19 +1,24 @@
 const normalizeCorePath = (path) => {
-  if (!path) return '/api/core'
+  if (!path) return '/internal/core'
 
-  if (path.startsWith('/api/core')) {
+  if (path.startsWith('/internal/core')) {
     return path
   }
 
+  if (path.startsWith('/api/core')) {
+    if (path === '/api/core') return '/internal/core'
+    return `/internal/core/${path.slice('/api/core/'.length)}`
+  }
+
   if (path.startsWith('/api/')) {
-    return `/api/core/${path.slice(5)}`
+    return `/internal/core/${path.slice(5)}`
   }
 
   if (path.startsWith('/')) {
-    return `/api/core${path}`
+    return `/internal/core${path}`
   }
 
-  return `/api/core/${path}`
+  return `/internal/core/${path}`
 }
 
 const withQuery = (path, query) => {
@@ -80,7 +85,7 @@ export const coreRequest = async ({
   const first = await fetchOnce({ path, method, body, query, signal })
 
   if (first.response.status === 401 && retryAuth) {
-    const refresh = await fetch('/api/auth/refresh', {
+    const refresh = await fetch('/internal/auth/refresh', {
       method: 'POST',
       cache: 'no-store',
     }).catch(() => null)

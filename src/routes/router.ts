@@ -242,15 +242,16 @@ const setRouteParams = (
     return
   }
 
-  const query = { ...(req.query as Record<string, string | string[]>) }
+  const query = req.query as Record<string, string | string[]> | undefined
+  if (!query) {
+    return
+  }
 
   for (const [key, value] of Object.entries(params)) {
     if (!query[key]) {
       query[key] = value
     }
   }
-
-  req.query = query as VercelRequest['query']
 }
 
 export const routeApiRequest = async (
@@ -258,19 +259,23 @@ export const routeApiRequest = async (
   res: VercelResponse,
 ): Promise<void> => {
   const runtimeUrl = parseRequestUrl(req)
+  const hasRewrittenPath = runtimeUrl.searchParams.has(rewritePathParam)
   const rewrittenPath = runtimeUrl.searchParams.get(rewritePathParam)
-  const effectivePath = rewrittenPath
-    ? `/api/${rewrittenPath.replace(/^\/+/, '')}`
+  const effectivePath = hasRewrittenPath
+    ? rewrittenPath
+      ? `/api/${rewrittenPath.replace(/^\/+/, '')}`
+      : '/api'
     : runtimeUrl.pathname
 
-  if (runtimeUrl.searchParams.has(rewritePathParam)) {
+  if (hasRewrittenPath) {
     runtimeUrl.searchParams.delete(rewritePathParam)
     const query = runtimeUrl.searchParams.toString()
     req.url = query ? `${effectivePath}?${query}` : effectivePath
 
-    const sanitizedQuery = { ...(req.query as Record<string, string | string[]>) }
-    delete sanitizedQuery[rewritePathParam]
-    req.query = sanitizedQuery as VercelRequest['query']
+    const requestQuery = req.query as Record<string, string | string[]> | undefined
+    if (requestQuery && rewritePathParam in requestQuery) {
+      delete requestQuery[rewritePathParam]
+    }
   }
 
   const resolved = resolveApiRoute(effectivePath)

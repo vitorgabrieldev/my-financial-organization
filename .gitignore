@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+.next
+site.financial/.next
 *.local
 coverage
 playwright-report
@@ -27,3 +29,5 @@ test-results
 *.sw?
 .vercel
 .env*.local
+.env.production
+.env.local

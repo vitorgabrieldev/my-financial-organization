@@ -10,7 +10,7 @@ export function LogoutButton() {
   const onLogout = async () => {
     try {
       setPending(true)
-      await fetch('/api/auth/logout', { method: 'POST' })
+      await fetch('/internal/auth/logout', { method: 'POST' })
     } finally {
       router.push('/')
       router.refresh()
